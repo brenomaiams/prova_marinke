@@ -1,5 +1,6 @@
+// src/models/profile.ts
 import { Model, DataTypes } from 'sequelize';
-import db from '../db';
+import db from '../db.js';
 class Profile extends Model {
 }
 Profile.init({

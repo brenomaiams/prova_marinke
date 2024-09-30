@@ -1,32 +1,41 @@
 import express, { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import winston from 'winston';
 import dotenv from 'dotenv';
-import db from './db.js'; // Importar a conexão com o MySQL do arquivo db.ts
+import db from './db.js'; 
+import profileRoutes from './routes/api/profileRoutes.js'; 
+import jobRoutes from './routes/api/jobRoutes.js';
+import Contract from './models/contract.js'; 
+import Job from './models/job.js';
 import { DataTypes } from 'sequelize';
+import depositRoutes from './routes/api/depositRoutes.js';
+import contractJobRoutes from './routes/api/contractJobRoutes.js';
+import contractRoutes from './routes/api/contractRoutes.js';
+import testRoutes from './routes/api/testRoutes.js';
 
-// Carregar variáveis de ambiente
+
+
+
 dotenv.config();
 
-// Inicializando o servidor
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configurações do servidor
+
 app.use(express.json());
 
-// Modelos Sequelize (Usuários)
+
 const User = db.define('User', {
   username: { type: DataTypes.STRING, unique: true },
   password: { type: DataTypes.STRING },
-  role: { type: DataTypes.STRING }, // cliente, operador, administrador
+  role: { type: DataTypes.STRING }, 
   isBlocked: { type: DataTypes.BOOLEAN, defaultValue: false },
   failedAttempts: { type: DataTypes.INTEGER, defaultValue: 0 },
-  balance: { type: DataTypes.FLOAT, defaultValue: 0 }
+  balance: { type: DataTypes.FLOAT, defaultValue: 0 },
 });
 
-// Middleware para verificar token JWT
+
 function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.sendStatus(401);
@@ -38,11 +47,9 @@ function authenticateToken(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-// Criação de usuário (registrar)
+
 app.post('/register', async (req: Request, res: Response) => {
   const { username, password, role } = req.body;
-
-  // Criptografar senha
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
@@ -53,7 +60,7 @@ app.post('/register', async (req: Request, res: Response) => {
   }
 });
 
-// Login e geração de token JWT
+
 app.post('/login', async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
@@ -75,13 +82,43 @@ app.post('/login', async (req: Request, res: Response) => {
   }
 
   await user.update({ failedAttempts: 0 });
-  const token = jwt.sign({ username: user.getDataValue('username'), role: user.getDataValue('role') }, process.env.JWT_SECRET || 'secret_key');
+  const token = jwt.sign(
+    { username: user.getDataValue('username'), role: user.getDataValue('role') },
+    process.env.JWT_SECRET || 'secret_key'
+  );
   res.json({ token });
 });
 
-// Inicializar banco de dados e servidor
-db.sync({ force: true }).then(() => {
-  app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
-  });
+
+
+
+// ROTAS!!!!!!!!!!
+app.use('/api/profiles', profileRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/contracts', contractJobRoutes);
+app.use('/api/contracts', contractRoutes);
+app.use('/api/test', testRoutes);
+
+
+
+
+
+
+
+app._router.stack.forEach((r: any) => {
+  if (r.route && r.route.path) {
+    console.log(r.route.path);
+  }
 });
+
+// Inicializar banco de dados e servidor
+db.sync() 
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Servidor rodando em http://localhost:${port}`);
+    });
+  })
+  .catch((err: any) => {
+    console.error('Erro ao sincronizar o banco de dados:', err);
+  });
