@@ -1,5 +1,6 @@
+// src/models/contract.ts
 import { Model, DataTypes } from 'sequelize';
-import db from '../db';
+import db from '../db.js';
 class Contract extends Model {
 }
 Contract.init({
@@ -8,12 +9,8 @@ Contract.init({
         primaryKey: true,
         autoIncrement: true,
     },
-    ProfileId: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: 'Profile',
-            key: 'id',
-        },
+    details: {
+        type: DataTypes.STRING,
     },
 }, {
     sequelize: db,

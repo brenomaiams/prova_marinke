@@ -1,5 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
-import db from '../db';
+import db from '../db.js';
+import Contract from './contract.js';
 class Job extends Model {
 }
 Job.init({
@@ -18,7 +19,7 @@ Job.init({
     ContractId: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Contract',
+            model: Contract,
             key: 'id',
         },
     },
